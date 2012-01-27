@@ -1,9 +1,7 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, GADTs, UndecidableInstances #-}
 
-module VecN ( VecN
-            , VecTNil(..)
-            , VecTCons(..)
-            , VecNClass(..)
+module VecN ( VecNClass(..)
+            , VecN(..)
             ) where
 
 import Pretty
@@ -16,67 +14,60 @@ import Data.Monoid
 
 import qualified Peano as P
 
-data VecTNil a = VecTNil
-data VecTCons v a = !a :<: !(v a)
+--data VecNil a = VecNil
+--data VecTCons v a = !a :<: !(v a)
 
-instance Show (VecTNil a) where
+instance Show (VecN P.Zero a) where
   show = const "[]"
 
-instance (Show a, Show (v a)) => Show (VecTCons v a) where
+instance (Show a, Show (VecN n a)) => Show (VecN (P.Succ n) a) where
   show (a :<: v) = "[" ++ show a ++ "]" ++ show v
 
-instance Functor VecTNil where
-  fmap _ VecTNil = VecTNil
+instance Functor (VecN P.Zero) where
+  fmap _ VecNil = VecNil
 
-instance (Functor v) => Functor (VecTCons v) where
+instance (Functor (VecN n)) => Functor (VecN (P.Succ n)) where
   fmap f (a :<: v) = f a :<: fmap f v
 
-instance Foldable VecTNil where
-  foldMap _ VecTNil = mempty
+instance Foldable (VecN P.Zero) where
+  foldMap _ VecNil = mempty
 
-instance (Foldable v) => Foldable (VecTCons v) where
+instance (Foldable (VecN n)) => Foldable (VecN (P.Succ n)) where
   foldMap f (a :<: v) = f a `mappend` foldMap f v
 
-instance Applicative VecTNil where
-  pure _ = VecTNil
-  (<*>) _ _ = VecTNil
+instance Applicative (VecN P.Zero) where
+  pure _ = VecNil
+  (<*>) _ _ = VecNil
 
-instance (Applicative v) => Applicative (VecTCons v) where
+instance (Applicative (VecN n)) => Applicative (VecN (P.Succ n)) where
   pure a = a :<: pure a
   (f :<: v1) <*> (a :<: v2) = f a :<: (v1 <*> v2)
 
-instance (Show a) => Pretty (VecTNil a) where
+instance (Show a) => Pretty (VecN P.Zero a) where
   pretty f n = (f n ++) . show
 
-instance (Show a, Show (v a)) => Pretty (VecTCons v a) where
+instance (Show a, Show (VecN n a)) => Pretty (VecN (P.Succ n) a) where
   pretty f n = (f n ++) . show
 
-class ( Functor (VecN n)
-      , Foldable (VecN n) ) => Vectify n where
-  type VecN n :: * -> *
+class ( P.Peano n
+      , Applicative (VecN n)
+      , Functor (VecN n)) => VecNClass n where
+  data VecN n :: * -> *
+  distance2 :: (Num a) => VecN n a -> VecN n a -> a  
+  vecCartProd :: VecN n [a] -> [VecN n a]
+  fromList :: [a] -> Maybe (VecN n a)
 
-instance Vectify P.Zero where
-  type VecN P.Zero = VecTNil
-
-instance (Vectify r) => Vectify (P.Succ r) where
-  type VecN (P.Succ r) = VecTCons (VecN r)
-
-class ( Functor v --(VecN n)
-      , Applicative v --(VecN n)
-      ) => VecNClass v where
-  distance2 :: (Num a) => v a -> v a -> a  
-  vecCartProd :: v [a] -> [v a]
-  fromList :: [a] -> Maybe (v a)
-
-instance VecNClass VecTNil where
-  distance2 _ _ = 0
-  vecCartProd VecTNil = [VecTNil]
-  fromList _ = Just (VecTNil)
-
-instance (VecNClass v) => VecNClass (VecTCons v) where
+instance (VecNClass r) => VecNClass (P.Succ r) where
+  data VecN (P.Succ r) a = !a :<: !(VecN r a)
   distance2 (a :<: v1) (b :<: v2) = (a - b) ^ (2 :: Int) + distance2 v1 v2
   vecCartProd (as :<: vs) = liftM2 (:<:) as (vecCartProd vs)
                         -- [ a :<: v | a <- as
                         --           , v <- vecCartProd vs ]
   fromList [] = Nothing
   fromList (a : as) = (a :<:) <$> fromList as
+
+instance VecNClass P.Zero where
+  data VecN P.Zero a = VecNil
+  distance2 _ _ = 0
+  vecCartProd VecNil = [VecNil]
+  fromList _ = Just VecNil
