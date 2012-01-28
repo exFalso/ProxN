@@ -2,27 +2,27 @@
 
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
-module Tree2N ( Tree2N(..)
-              , Tree2NClass(..)
-              , Treed(..)
-              , VecTree
-              , fold2NTree
-              , Tree2N.fromList
-              , depth
-              , size
-              , tree0
-              , tree1
-              , tree2
-              , tree3 ) where
+module Math.ProxN.Tree2N ( Tree2N(..)
+                         , Tree2NClass(..)
+                         , Treed(..)
+                         , VecTree
+                         , fold2NTree
+                         , Math.ProxN.Tree2N.fromList
+                         , depth
+                         , size
+                         , tree0
+                         , tree1
+                         , tree2
+                         , tree3 ) where
 
-import VecN
-import Pretty
-import Show1
+import Math.ProxN.VecN
+import Math.ProxN.Pretty
+import Math.ProxN.Show1
 
 import Data.Functor
 import Control.Applicative
 
-import qualified Peano as P
+import qualified Math.ProxN.Peano as P
 
   -- Tree with branching factor 2^N
 data Tree2N n a = Tree2NBranch !a !(Treed n (Tree2N n a))

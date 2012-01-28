@@ -1,6 +1,6 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, EmptyDataDecls #-}
 
-module Peano where
+module Math.ProxN.Peano where
 
 data Zero
 data Succ n

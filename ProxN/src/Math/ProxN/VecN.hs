@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, GADTs, UndecidableInstances #-}
 
-module VecN ( VecNClass(..)
-            , VecN(..)
-            ) where
+module Math.ProxN.VecN ( VecNClass(..)
+                       , VecN(..)
+                       ) where
 
-import Pretty
+import Math.ProxN.Pretty
 
 import Control.Applicative
 import Control.Monad(liftM2)
@@ -12,7 +12,7 @@ import Data.Functor
 import Data.Foldable
 import Data.Monoid
 
-import qualified Peano as P
+import qualified Math.ProxN.Peano as P
 
 --data VecNil a = VecNil
 --data VecTCons v a = !a :<: !(v a)

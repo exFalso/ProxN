@@ -1,11 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Pretty( Pretty(..)
-             , Pretty1(..)
-             , prettyPut
-             , prettyNl
-             , prettyIndent
-             ) where
+module Math.ProxN.Pretty( Pretty(..)
+                        , Pretty1(..)
+                        , prettyPut
+                        , prettyNl
+                        , prettyIndent
+                        ) where
 
 import Control.Applicative
 import Control.Monad.Reader

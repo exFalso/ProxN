@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Proximity where
+module Math.ProxN.Proximity where
 
-import Tree2N
-import VecN
+import Math.ProxN.Tree2N
+import Math.ProxN.VecN
 
 import Control.Applicative
 

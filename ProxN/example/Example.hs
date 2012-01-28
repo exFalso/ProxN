@@ -1,12 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Main where
 
-import VecN as Vec
-import Tree2N as Tree
-import Peano
-import Pretty
-import Proximity
+import Math.ProxN.VecN as Vec
+import Math.ProxN.Tree2N as Tree
+import Math.ProxN.Peano
+import Math.ProxN.Pretty
+import Math.ProxN.Proximity
 
 import System.Random
 import Control.Applicative
@@ -19,15 +17,23 @@ import Data.Maybe
 _NUM :: Int
 _NUM = 2000
 
+-- range of one coordinate
+_RANGE :: (Double, Double)
+_RANGE = (0, 100)
+
 -- r^2
 _TOLERANCE2 :: Double
-_TOLERANCE2 = 1.0
+_TOLERANCE2 = 500.0
 
 -- dimension
-type Dim = Zero
+type Dim = Five
+
+
+------------
+
 
 randomList :: Int -> IO [Double]
-randomList n = withStdGen (replicateM n (getRandomR (1, 100)))
+randomList n = withStdGen (replicateM n (getRandomR _RANGE))
 
 withStdGen :: (MonadIO m) => RandT StdGen m a -> m a
 withStdGen r = do
@@ -36,7 +42,7 @@ withStdGen r = do
   liftIO $ setStdGen nextGen
   return a
 
--- generates a random vector, then 20 random vector-trees and calculates the proximity sets of the vector
+-- generates a random vector, then 20 random vector-trees of _NUM vectors and calculates the proximity sets of the vector
 main :: IO ()
 main = do
   let peano = undefined :: Dim
@@ -46,7 +52,7 @@ main = do
     , "Number of points: " ++ show _NUM
     , "Random Vector: " ++ prettySimp (ranVec :: VecN Dim Double)
     , "Tolerance^2: " ++ show _TOLERANCE2
-    , "Smallest depth: " ++ show (logarithm peano (fromIntegral _NUM))
+    , "Depth lower bound: " ++ show (logarithm peano (fromIntegral _NUM))
     ]
   replicateM_ 20 $ do
     let vecM = Vec.fromList <$> randomList (fromPeano peano)
