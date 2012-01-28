@@ -1,8 +1,0 @@
-OPTS=-Wall -O3 -Werror # -rtsopts -auto-all -prof
-FILES=VecN.hs Tree2N.hs SortN.hs
-
-all:
-	ghc -o ../bin/main $(OPTS) $(FILES)
-
-clean:
-	rm -rf *.hi *.o
