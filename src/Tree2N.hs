@@ -1,6 +1,6 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, UndecidableInstances, FlexibleContexts, GADTs, ScopedTypeVariables, TypeFamilies, BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, TypeFamilies, BangPatterns #-}
 
--- Treeify constructs a depth N binary tree (that is 2^N nodes) in the type level. This will be used to construct a Tree2N with branching factor 2^N
+{-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module Tree2N ( Tree2N(..)
               , Tree2NClass(..)
@@ -17,6 +17,7 @@ module Tree2N ( Tree2N(..)
 
 import VecN
 import Pretty
+import Show1
 
 import Data.Functor
 import Control.Applicative
@@ -24,28 +25,32 @@ import Control.Applicative
 import qualified Peano as P
 
   -- Tree with branching factor 2^N
-data Tree2N n a where
-  Tree2NBranch :: !a -> !(Treed n (Tree2N n a)) -> Tree2N n a
-  Tree2NLeaf :: Tree2N n a
+data Tree2N n a = Tree2NBranch !a !(Treed n (Tree2N n a))
+                | Tree2NLeaf
 
-instance (Functor (Treed n)) => Functor (Tree2N n) where
+instance (Tree2NClass n) => Functor (Tree2N n) where
   fmap _ Tree2NLeaf = Tree2NLeaf
   fmap f (Tree2NBranch a t) = Tree2NBranch (f a) (fmap (fmap f) t)
 
-instance (Applicative (Treed n)) => Applicative (Tree2N n) where
+instance (Tree2NClass n) => Applicative (Tree2N n) where
   pure a = Tree2NBranch a (pure Tree2NLeaf)
   Tree2NLeaf <*> _ = Tree2NLeaf
   _ <*> Tree2NLeaf = Tree2NLeaf
   (Tree2NBranch f tf) <*> (Tree2NBranch a ta) = Tree2NBranch (f a) (fmap (<*>) tf <*> ta)
 
-instance (Show a, Show (Treed n (Tree2N n a))) => Show (Tree2N n a) where
+instance (Show a, Tree2NClass n) => Show (Tree2N n a) where
   show Tree2NLeaf = "Tree2NLeaf"
-  show (Tree2NBranch a t) = "Tree2NBranch " ++ show a ++ " " ++ show t
+  show (Tree2NBranch a t) = "Tree2NBranch " ++ show a ++ " " ++ show1 t
 
-instance (Pretty a, Pretty (Treed n (Tree2N n a))) => Pretty (Tree2N n a) where
-  pretty f n Tree2NLeaf = f n ++ "_\n"
-  pretty f n (Tree2NBranch a tr) = pretty f n a ++ "\n" ++ pretty f (succ n) tr
+instance (Tree2NClass n) => Pretty1 (Tree2N n) where
+  prettyPrint1 Tree2NLeaf = prettyPut "_" >> prettyNl
+  prettyPrint1 (Tree2NBranch a tr) = do
+    prettyPrint a
+    prettyNl
+    prettyIndent (prettyPrint1 tr)
 
+instance (Tree2NClass n, Pretty a) => Pretty (Tree2N n a) where
+  prettyPrint = prettyPrint1
 
 instance Functor (Treed P.Zero) where
   fmap f (TreeNil a) = TreeNil (f a)
@@ -61,27 +66,32 @@ instance (Applicative (Treed n)) => Applicative (Treed (P.Succ n)) where
   pure a = pure a :/\: pure a
   (f1 :/\: f2) <*> (a :/\: b) = (f1 <*> a) :/\: (f2 <*> b)
 
-instance (Show a) => Show ((Treed P.Zero) a) where
-  show (TreeNil a) = show a
+instance Show1 (Treed P.Zero) where
+  show1 (TreeNil a) = show a
 
-instance (Show a, Show (Treed n a)) => Show (Treed (P.Succ n) a) where
-  show (t1 :/\: t2) = "(" ++ show t1 ++ " :/\\: " ++ show t2 ++ ")"
+instance (Show1 (Treed n)) => Show1 (Treed (P.Succ n)) where
+  show1 (t1 :/\: t2) = "(" ++ show1 t1 ++ " :/\\: " ++ show1 t2 ++ ")"
 
-instance (Pretty a) => Pretty ((Treed P.Zero) a) where
-  pretty f n (TreeNil a) = pretty f n a
+instance Pretty1 (Treed P.Zero) where
+  prettyPrint1 (TreeNil a) = prettyPrint a
 
-instance (Pretty a, Pretty (Treed n a)) => Pretty (Treed (P.Succ n) a) where
-  pretty f n (t1 :/\: t2) = f n ++ "(\n" ++
-                            pretty f (succ n) t1 ++
-                            pretty f (succ n) t2 ++
-                            f n ++ ")\n"
+instance (Pretty1 (Treed n)) => Pretty1 (Treed (P.Succ n)) where
+  prettyPrint1 (t1 :/\: t2) = do
+    prettyPut "(" >> prettyNl
+    prettyIndent $ do
+      prettyPrint1 t1
+      prettyNl
+      prettyPrint1 t2
+    prettyNl
+    prettyPut ")" >> prettyNl
 
 insertNode :: (Ord a, Tree2NClass n) =>
               VecN n a -> VecTree n a -> VecTree n a
 insertNode v Tree2NLeaf = Tree2NBranch v (pure Tree2NLeaf)
 insertNode v1 (Tree2NBranch v2 r) = Tree2NBranch v2 $ swapNode (insertNode v1) v1 v2 r
 
-class (Functor (Treed n), Applicative (Treed n)) => Tree2NClass n where
+class (Functor (Treed n), Applicative (Treed n),
+       Show1 (Treed n), Pretty1 (Treed n)) => Tree2NClass n where
   data Treed n :: * -> *
   swapNode :: (Ord a) => (b -> b) -> VecN n a -> VecN n a -> Treed n b -> Treed n b
   foldTree :: (a -> b) -> VecN n (b -> b -> b) -> Treed n a -> b

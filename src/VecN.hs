@@ -44,10 +44,10 @@ instance (Applicative (VecN n)) => Applicative (VecN (P.Succ n)) where
   (f :<: v1) <*> (a :<: v2) = f a :<: (v1 <*> v2)
 
 instance (Show a) => Pretty (VecN P.Zero a) where
-  pretty f n = (f n ++) . show
+  prettyPrint = prettyPut . show
 
 instance (Show a, Show (VecN n a)) => Pretty (VecN (P.Succ n) a) where
-  pretty f n = (f n ++) . show
+  prettyPrint = prettyPut . show
 
 class ( P.Peano n
       , Applicative (VecN n)

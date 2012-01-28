@@ -9,6 +9,12 @@ type One = Succ Zero
 type Two = Succ One
 type Three = Succ Two
 type Four = Succ Three
+type Five = Succ Four
+type Six = Succ Five
+type Seven = Succ Six
+type Eight = Succ Seven
+type Nine = Succ Eight
+type Ten = Succ Nine
 
 class Peano p where
   fromPeano :: p -> Int

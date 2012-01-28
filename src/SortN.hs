@@ -15,11 +15,16 @@ import Control.Monad.IO.Class
 import Control.Monad
 import Data.Maybe
 
-_LENGTH :: Int
-_LENGTH = 100
+-- number of points
+_NUM :: Int
+_NUM = 2000
 
-randList :: IO [Double]
-randList = randomList _LENGTH
+-- r^2
+_TOLERANCE2 :: Double
+_TOLERANCE2 = 1.0
+
+-- dimension
+type Dim = Zero
 
 randomList :: Int -> IO [Double]
 randomList n = withStdGen (replicateM n (getRandomR (1, 100)))
@@ -31,22 +36,21 @@ withStdGen r = do
   liftIO $ setStdGen nextGen
   return a
 
-type Dim = Two
-
-_TOLERANCE2 :: Double
-_TOLERANCE2 = 10000.0
-
+-- generates a random vector, then 20 random vector-trees and calculates the proximity sets of the vector
 main :: IO ()
 main = do
   let peano = undefined :: Dim
-      siz = _LENGTH ^ fromPeano peano
   ranVec <- fromJust . Vec.fromList <$> randomList (fromPeano peano)
-  putStrLn $ "Random Vector: " ++ prettySimp (ranVec :: VecN Dim Double)
-  putStrLn $ "Tolerance^2: " ++ show _TOLERANCE2
-  putStrLn $ "Smallest depth: " ++ show (logarithm peano (fromIntegral siz))
+  mapM_ putStrLn
+    [ "Dimension: " ++ show (fromPeano peano)
+    , "Number of points: " ++ show _NUM
+    , "Random Vector: " ++ prettySimp (ranVec :: VecN Dim Double)
+    , "Tolerance^2: " ++ show _TOLERANCE2
+    , "Smallest depth: " ++ show (logarithm peano (fromIntegral _NUM))
+    ]
   replicateM_ 20 $ do
-    rlist <- randList
-    let tr = Tree.fromList $ vecCartProd (pure rlist) :: VecTree Dim Double
+    let vecM = Vec.fromList <$> randomList (fromPeano peano)
+    tr <- Tree.fromList <$> replicateM _NUM (fromJust <$> vecM)
     putStrLn $ "Depth: " ++ show (depth tr)
-    putStrLn $ "No. of vecs in proximity: "
-      ++ show (length (prox _TOLERANCE2 ranVec tr))
+    putStrLn $ "Vecs in proximity: "
+      ++ show ((prox _TOLERANCE2 ranVec tr))
